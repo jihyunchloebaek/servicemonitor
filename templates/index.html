@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서비스 장애 모니터 | LG유플러스 품질혁신센터</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --border: #e5e5ea;
+    --text: #1d1d1f;
+    --text2: #6e6e73;
+    --text3: #aeaeb2;
+    --normal: #34c759;
+    --down: #ff3b30;
+    --accent: #0071e3;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .header {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 14px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-eyebrow { font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 2px; }
+  .header-title { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+  .header-title span { color: var(--accent); }
+  .header-desc { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; padding: 80px 20px;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); }
+
+  .main { padding: 16px 16px 40px; max-width: 600px; margin: 0 auto; }
+
+  .summary-bar {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 16px 18px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .summary-counts { display: flex; gap: 20px; }
+  .count-item { text-align: center; }
+  .count-num { font-size: 24px; font-weight: 700; line-height: 1; }
+  .count-num.normal { color: var(--normal); }
+  .count-num.down { color: var(--down); }
+  .count-label { font-size: 11px; color: var(--text2); margin-top: 3px; }
+  .refresh-btn {
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    background: none; border: 1px solid var(--accent);
+    border-radius: 20px; padding: 6px 14px; cursor: pointer; transition: all .15s;
+  }
+  .refresh-btn:hover { background: var(--accent); color: white; }
+  .refresh-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .section { margin-bottom: 14px; }
+  .section-title {
+    font-size: 11px; font-weight: 700; color: var(--text2);
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 0 4px; margin-bottom: 8px;
+  }
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+
+  .service-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background .12s;
+  }
+  .service-row:last-child { border-bottom: none; }
+  .service-row:hover { background: #f9f9fb; }
+
+  .service-emoji { font-size: 22px; flex-shrink: 0; }
+  .service-info { flex: 1; min-width: 0; }
+  .service-name { font-size: 15px; font-weight: 600; }
+  .service-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .status-badge {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; flex-shrink: 0;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .status-badge.normal { background: #e8faf0; color: #1a7a3c; }
+  .status-badge.down { background: #fff0ef; color: #c0392b; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .status-dot.normal { background: var(--normal); }
+  .status-dot.down { background: var(--down); animation: pulse 1.2s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .5; transform: scale(.8); }
+  }
+
+  .articles { display: none; padding: 0 18px 14px 54px; background: #f9f9fb; border-bottom: 1px solid var(--border); }
+  .articles.open { display: block; }
+  .article-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .article-item:last-child { border-bottom: none; }
+  .article-title { font-size: 13px; line-height: 1.5; color: var(--text); text-decoration: none; display: block; }
+  .article-title:hover { color: var(--accent); text-decoration: underline; }
+  .article-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .no-articles { font-size: 12px; color: var(--text3); padding: 6px 0; }
+
+  .checked-at { text-align: center; font-size: 11px; color: var(--text3); margin-top: 16px; }
+  .footer { text-align: center; font-size: 11px; color: var(--text3); padding: 20px; border-top: 1px solid var(--border); margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">LG유플러스 품질혁신센터</div>
+  <h1 class="header-title">서비스 <span>장애</span> 모니터</h1>
+  <div class="header-desc">네이버 뉴스 기반 · 1시간 이내 기사 감지 · 30분마다 자동 갱신</div>
+</div>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">장애 현황 확인 중...</div>
+</div>
+
+<div id="main" class="main" style="display:none">
+  <div class="summary-bar">
+    <div class="summary-counts">
+      <div class="count-item">
+        <div class="count-num normal" id="normalCount">-</div>
+        <div class="count-label">정상</div>
+      </div>
+      <div class="count-item">
+        <div class="count-num down" id="downCount">-</div>
+        <div class="count-label">이상 감지</div>
+      </div>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadMonitor()">새로고침</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📡 통신사</div>
+    <div class="card" id="telcoList"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">📺 OTT</div>
+    <div class="card" id="ottList"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">🌐 IT 서비스</div>
+    <div class="card" id="itList"></div>
+  </div>
+
+  <div class="checked-at" id="checkedAt"></div>
+</div>
+
+<div class="footer">LG유플러스 품질혁신센터 · Generated by Claude AI</div>
+
+<script>
+const GROUPS = {
+  telco: ["skt","kt","lgu"],
+  ott: ["netflix","wavve","tving"],
+  it: ["naver","kakao"],
+};
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleString('ko-KR', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) + ' 기준';
+  } catch { return iso; }
+}
+
+function renderGroup(containerId, results, ids) {
+  const items = ids.map(id => results.find(r => r.id === id)).filter(Boolean);
+  document.getElementById(containerId).innerHTML = items.map(item => {
+    const hasArticles = item.articles && item.articles.length > 0;
+    const articlesHtml = hasArticles
+      ? item.articles.map(a => `
+          <div class="article-item">
+            <a href="${esc(a.link)}" target="_blank" rel="noopener" class="article-title">${esc(a.title)}</a>
+            <div class="article-time">${esc(a.pubDate)}</div>
+          </div>`).join('')
+      : `<div class="no-articles">최근 1시간 이내 장애 관련 기사 없음</div>`;
+
+    return `
+      <div class="service-row" onclick="toggle('${item.id}')">
+        <div class="service-emoji">${item.emoji}</div>
+        <div class="service-info">
+          <div class="service-name">${esc(item.name)}</div>
+          <div class="service-desc">${item.status==='down' ? `관련 기사 ${item.articles.length}건 감지` : '이상 없음'}</div>
+        </div>
+        <div class="status-badge ${item.status}">
+          <div class="status-dot ${item.status}"></div>
+          ${item.status==='down' ? '이상 감지' : '정상'}
+        </div>
+      </div>
+      <div class="articles" id="articles-${item.id}">${articlesHtml}</div>`;
+  }).join('');
+}
+
+function toggle(id) {
+  document.getElementById('articles-'+id).classList.toggle('open');
+}
+
+async function loadMonitor() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '확인중...'; }
+
+  try {
+    const resp = await fetch('/api/monitor');
+    if (resp.status === 202) { setTimeout(loadMonitor, 5000); return; }
+    const data = await resp.json();
+    const results = data.results || [];
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+
+    document.getElementById('normalCount').textContent = results.filter(r=>r.status==='normal').length;
+    document.getElementById('downCount').textContent = results.filter(r=>r.status==='down').length;
+    document.getElementById('checkedAt').textContent = formatDate(data.checked_at);
+
+    renderGroup('telcoList', results, GROUPS.telco);
+    renderGroup('ottList', results, GROUPS.ott);
+    renderGroup('itList', results, GROUPS.it);
+  } catch(e) { console.error(e); }
+
+  if (btn) { btn.disabled = false; btn.textContent = '새로고침'; }
+}
+
+loadMonitor();
+setInterval(loadMonitor, 30 * 60 * 1000);
+</script>
+</body>
+</html>
