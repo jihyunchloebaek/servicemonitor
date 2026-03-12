@@ -21,14 +21,14 @@ NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID", "")
 NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET", "")
 
 SERVICES = [
-    {"id": "skt",     "name": "SKT",     "emoji": "🔷", "keywords": ["SKT 장애", "SKT 불통", "SKT 인터넷 안됨"]},
-    {"id": "kt",      "name": "KT",      "emoji": "🔴", "keywords": ["KT 장애", "KT 불통", "KT 인터넷 안됨"]},
-    {"id": "lgu",     "name": "LGU+",    "emoji": "💜", "keywords": ["LG유플러스 장애", "유플러스 불통", "유플러스 안됨"]},
-    {"id": "netflix", "name": "넷플릭스", "emoji": "🎬", "keywords": ["넷플릭스 장애", "넷플릭스 안됨"]},
-    {"id": "wavve",   "name": "웨이브",   "emoji": "🌊", "keywords": ["웨이브 장애", "wavve 안됨"]},
-    {"id": "tving",   "name": "티빙",     "emoji": "📺", "keywords": ["티빙 장애", "tving 안됨"]},
-    {"id": "naver",   "name": "네이버",   "emoji": "🟢", "keywords": ["네이버 장애", "네이버 안됨"]},
-    {"id": "kakao",   "name": "카카오",   "emoji": "🟡", "keywords": ["카카오 장애", "카카오톡 불통"]},
+    {"id": "skt",     "name": "SKT",     "emoji": "🔷", "keywords": ["SKT 불통", "SKT 먹통", "SKT 접속 안됨", "SKT 멈춤", "SKT 장애 발생"]},
+    {"id": "kt",      "name": "KT",      "emoji": "🔴", "keywords": ["KT 불통", "KT 먹통", "KT 접속 안됨", "KT 멈춤", "KT 장애 발생"]},
+    {"id": "lgu",     "name": "LGU+",    "emoji": "💜", "keywords": ["유플러스 불통", "유플러스 먹통", "유플러스 접속 안됨", "유플러스 멈춤", "유플러스 장애 발생"]},
+    {"id": "netflix", "name": "넷플릭스", "emoji": "🎬", "keywords": ["넷플릭스 불통", "넷플릭스 먹통", "넷플릭스 접속 안됨", "넷플릭스 멈춤"]},
+    {"id": "wavve",   "name": "웨이브",   "emoji": "🌊", "keywords": ["웨이브 불통", "웨이브 먹통", "웨이브 접속 안됨", "웨이브 멈춤"]},
+    {"id": "tving",   "name": "티빙",     "emoji": "📺", "keywords": ["티빙 불통", "티빙 먹통", "티빙 접속 안됨", "티빙 멈춤"]},
+    {"id": "naver",   "name": "네이버",   "emoji": "🟢", "keywords": ["네이버 불통", "네이버 먹통", "네이버 접속 안됨", "네이버 멈춤"]},
+    {"id": "kakao",   "name": "카카오",   "emoji": "🟡", "keywords": ["카카오톡 불통", "카카오 먹통", "카카오 접속 안됨", "카카오 멈춤"]},
 ]
 
 monitor_cache: dict = {
@@ -56,12 +56,17 @@ async def check_service(service: dict) -> dict:
                 if resp.is_success:
                     for item in resp.json().get("items", []):
                         try:
+                            # 제목에서만 키워드 감지
+                            title = item.get("title", "").replace("<b>","").replace("</b>","")
+                            title_has_keyword = any(kw in title for kw in service["keywords"])
+                            if not title_has_keyword:
+                                continue
                             pub_dt = parsedate_to_datetime(item.get("pubDate", ""))
                             age_min = (datetime.now(pub_dt.tzinfo) - pub_dt).total_seconds() / 60
                             if age_min <= 60:
                                 is_down = True
                                 articles.append({
-                                    "title": item.get("title", "").replace("<b>","").replace("</b>",""),
+                                    "title": title,
                                     "link": item.get("link", ""),
                                     "pubDate": item.get("pubDate", ""),
                                 })
